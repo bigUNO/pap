@@ -38,3 +38,4 @@ rsconnect/
 # Testing files
 sample.r
 output.json
+*.csv
