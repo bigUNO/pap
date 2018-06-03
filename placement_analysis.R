@@ -9,9 +9,10 @@ library(urltools)
 library(dplyr)
 
 # Library to calculate performance metrics
-source("../calculate_performance_metrics.R")
+source("calculate_performance_metrics.R")
 
 input.file <- "data/placement_keywords.csv"
+output.file <- "output/data.out"
 
 # Load data ---------------------------
 # Read file into variable
@@ -74,16 +75,18 @@ aggdata.dataframe$cpc <- CalculatePerformanceMetrics(
 # PFM to replace NaNs in `cpc` with zero
 aggdata.dataframe$cpc[ is.nan(aggdata.dataframe$cpc) ] = 0
 aggdata.dataframe$ctr[ is.na(aggdata.dataframe$ctr) ] = 0
-str(aggdata.dataframe)
 # Trying to run a t test for every row of my data frame.
 # Want to identify the p value of each domain to understand which CTRs are
 # statistically significant based on the number of impressions.
 
 # Creating and naming my linear model to my data set. Trying to predict clicks
 # by doing a linear regression based on impressions
-summary(aggdata.dataframe$ctr)
-summary(aggdata.dataframe$cpc)
 
-t.test(aggdata.dataframe$ctr)
-t.test(sum.aggdata.Impr. ~ ctr, data = aggdata.dataframe)
+#aggdata.dataframe[ apply(aggdata.dataframe != 0, 1, all), ]
+
+write.table(sum.aggdata, "output/sum.aggdata.out", sep=",")
+write.table(aggdata.dataframe, "output/aggdata.dataframe.out", sep=",")
+
+#t.test(aggdata.dataframe$ctr)
+#t.test(sum.aggdata.Impr. ~ ctr, data = aggdata.dataframe)
 #t.test(sum.aggdata.Impr., ctr)
