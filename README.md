@@ -10,3 +10,6 @@ R < placement_analysis.R --no-save
 ```sh
 R < run_tests.R --no-save
 ```
+
+# JSON
+GO [package](https://github.com/bigUNO/pkp) to convert .csv to .json
