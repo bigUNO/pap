@@ -13,44 +13,97 @@ input.file <- "placement_keywords.csv"
 # Read file into variable
 input.data <- read.csv(input.file)
 
-# attaching the primary data set for more analysis
+# Creating data sets ---------------------------
+# Add input.data to R search path
 # TODO: replace attach
 attach(input.data)
 
-# Vectoring ---------------------------
 # Assign the second column (URL) to url.vector
 url.vector <- input.data[,2]
 
-# URL cleansing ---------------------------
 # Parse the subdomain and second-level domain out of the FQDN
 parsed.domain <- url_parse(url.vector)
 
 # Compactly display the resulting `parsed.domain` variable containing the
-# second-level domain.
-str(parsed.domain)
+# second-level domain. This line can be commented out to save processing time
+# and condense output.
+#str(parsed.domain)
 
-# Creating a new data set that contains the original data set, and added in
-# the domain column from the parsed.domain
-# data set. Using the dplyr package
-newdata <- (bind_cols(input.data, parsed.domain['domain']))
-attach(newdata)
+# Bind `domain` column from `parsed.domain` to create new data set.
+merged.data <- (bind_cols(input.data, parsed.domain["domain"]))
 
-# Creating an aggregated data frame. Suming all columns in the "newdata" data
-# set
-Aggregated <- (aggregate(. ~ domain, newdata, sum))
+# Remove `input.data` from R search path.
+detach(input.data)
 
+# Add merged.data to R search path
+# TODO: replace attach
+attach(merged.data)
 
+# Create an aggregate data set with the sum of `domain`s from merged.data by
+# domain
+sum.aggdata <- aggregate(. ~ domain, merged.data, sum)
 
-# Creating a clean data table with only the columns needed. In this case,
-# clicks, impressions and cost
-clean_frame <- data.frame(Aggregated$domain, Aggregated$Clicks, Aggregated$Impr., Aggregated$Cost)
-attach(clean_frame)
+# Remove `merged.data` from R search path.
+detach(merged.data)
 
-# Trying to calculate CTR and CPC and add it to my "clean_frame" data set
-clean_frame$ctr = (clean_frame$Aggregated.Clicks/clean_frame$Aggregated.Impr.)*100
-clean_frame$cpc = (clean_frame$Aggregated.Cost/clean_frame$Aggregated.Clicks)
+# Create a data table from `sum.aggdata`.
+aggdata.dataframe <- data.frame(
+   sum.aggdata$domain,
+   sum.aggdata$Clicks,
+   sum.aggdata$Impr.,
+   sum.aggdata$Cost)
 
+# Calulation functions ---------------------------
 
+CalculatePerformanceMetrics <- function(x, y, type, verbose = FALSE) {
+   # Computes the "click through rate" and the "cost per click". The CTR is
+   # computed witht the additional step of multipling the quotient by 100.
+   #
+   # Args:
+   #  x: Dividend
+   #  y: Divisor
+   #  percent: If TRUE, multiply the quotient by 100 before returning; if not,
+   #     return the quotient as computed. Default is TRUE.
+   #  verbose: If TRUE, prints calculations; if not, not. Default is FALSE.
+   #
+   # Returns:
+   #  (x / y) * 100
+   #  Optionally (x / y)
+   switch(type
+      , ctr = {
+         quotient <- (x / y) * 100
+      }
+      , cpc = {
+         quotient <- (x / y)
+      })
+
+   if (verbose) {
+      cat("quotient = ", quotient, "\n")
+   }
+   return (quotient)
+}
+# Running calculations ---------------------------
+# Add aggdata.dataframe to R search path
+attach(aggdata.dataframe)
+
+# Calculate CTR and add to `aggdata.dataframe` data frame
+aggdata.dataframe$ctr <- CalculatePerformanceMetrics(
+   aggdata.dataframe$sum.aggdata.Clicks,
+   aggdata.dataframe$sum.aggdata.Impr.,
+   "ctr")
+
+# Calculate CPC and add to `aggdata.dataframe` data frame
+aggdata.dataframe$cpc <- CalculatePerformanceMetrics(
+   aggdata.dataframe$sum.aggdata.Cost,
+   aggdata.dataframe$sum.aggdata.Clicks,
+   "cpc")
+
+# troubleshooting
+str(aggdata.dataframe)
+
+# PFM
+aggdata.dataframe$cpc[ !is.nan(aggdata.dataframe)]
+str(aggdata.dataframe)
   ## This is where i'm getting stuck. Trying to run a t test for every row of
   # my data frame.
 
@@ -64,4 +117,4 @@ mutate_all(.funs = funs(ifelse(is.na(.),0,.)))
 
 # Creating and naming my linear model to my data set. Trying to predict clicks
 # by doing a linear regression based on impressions
-t.test(Aggregated.Impr. ~ ctr, data = clean_frame)
+t.test(sum.aggdata.Impr. ~ ctr, data = aggdata.dataframe)
