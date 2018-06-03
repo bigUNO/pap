@@ -35,6 +35,10 @@ vignettes/*.pdf
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
 
+# Don't save data or output
+data/*
+output/*
+
 # Testing files
 sample.r
 output.json
